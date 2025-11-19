@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Confession</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ffafbd, #ffc3a0);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #d63333, #b30000);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .heart {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            transform: rotate(45deg);
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        .heart:before, .heart:after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        .heart:before {
+            top: -20px;
+            left: 0;
+        }
+
+        .heart:after {
+            top: 0;
+            left: -20px;
+        }
+
+        .heart-1 {
+            top: 20px;
+            left: 20px;
+        }
+
+        .heart-2 {
+            bottom: 20px;
+            right: 20px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .question {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .question h2 {
+            color: #b30000;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #ffafbd;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .option:hover {
+            background: #ffafbd;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .option.selected {
+            background: #d63333;
+            color: white;
+            border-color: #b30000;
+        }
+
+        .btn {
+            display: block;
+            width: 200px;
+            margin: 30px auto 0;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #d63333, #b30000);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(135deg, #d63333, #b30000);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .letter {
+            background: #fff9f9;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            position: relative;
+            border-left: 5px solid #d63333;
+        }
+
+        .letter h2 {
+            color: #b30000;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .letter p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: #444;
+        }
+
+        .signature {
+            text-align: right;
+            margin-top: 30px;
+            font-style: italic;
+            color: #b30000;
+            font-weight: bold;
+        }
+
+        .floating-hearts {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-heart {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            transform: rotate(45deg);
+            animation: float 8s linear infinite;
+            opacity: 0;
+        }
+
+        .floating-heart:before, .floating-heart:after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+        }
+
+        .floating-heart:before {
+            top: -10px;
+            left: 0;
+        }
+
+        .floating-heart:after {
+            top: 0;
+            left: -10px;
+        }
+
+        .final-message {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 1.3rem;
+            color: #b30000;
+            font-weight: bold;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: rotate(45deg) scale(1); }
+            25% { transform: rotate(45deg) scale(1.1); }
+            50% { transform: rotate(45deg) scale(1); }
+            75% { transform: rotate(45deg) scale(1.1); }
+            100% { transform: rotate(45deg) scale(1); }
+        }
+
+        @keyframes float {
+            0% {
+                transform: rotate(45deg) translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: rotate(45deg) translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .response-message {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-weight: bold;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="heart heart-1"></div>
+            <h1>A Special Message For You</h1>
+            <p>Answer a few questions to reveal a secret</p>
+            <div class="heart heart-2"></div>
+        </div>
+        
+        <div class="content">
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            
+            <!-- Welcome Screen -->
+            <div class="screen active" id="screen-1">
+                <div class="question">
+                    <h2>Welcome to this little interactive experience!</h2>
+                    <p>I've created something special for you. Would you like to continue?</p>
+                </div>
+                <div class="options">
+                    <div class="option" data-next="2">Yes, let's see what you've made!</div>
+                    <div class="option" data-next="2">Of course! I'm curious</div>
+                    <div class="option" data-next="2">Definitely! This looks interesting</div>
+                </div>
+            </div>
+            
+            <!-- Question 1 -->
+            <div class="screen" id="screen-2">
+                <div class="question">
+                    <h2>First question: What's your idea of a perfect day?</h2>
+                </div>
+                <div class="options">
+                    <div class="option" data-next="3">A cozy day indoors with good food and movies</div>
+                    <div class="option" data-next="3">An adventurous day exploring new places</div>
+                    <div class="option" data-next="3">A relaxing day at a beautiful natural spot</div>
+                    <div class="option" data-next="3">A fun day with friends and laughter</div>
+                </div>
+            </div>
+            
+            <!-- Question 2 -->
+            <div class="screen" id="screen-3">
+                <div class="question">
+                    <h2>What quality do you value most in a person?</h2>
+                </div>
+                <div class="options">
+                    <div class="option" data-next="4">Kindness and empathy</div>
+                    <div class="option" data-next="4">Sense of humor and fun</div>
+                    <div class="option" data-next="4">Intelligence and curiosity</div>
+                    <div class="option" data-next="4">Honesty and loyalty</div>
+                </div>
+            </div>
+            
+            <!-- Question 3 -->
+            <div class="screen" id="screen-4">
+                <div class="question">
+                    <h2>How do you feel when we spend time together?</h2>
+                </div>
+                <div class="options">
+                    <div class="option" data-next="5">Happy and comfortable</div>
+                    <div class="option" data-next="5">Excited and energized</div>
+                    <div class="option" data-next="5">Peaceful and content</div>
+                    <div class="option" data-next="5">I enjoy our time together</div>
+                </div>
+            </div>
+            
+            <!-- Question 4 -->
+            <div class="screen" id="screen-5">
+                <div class="question">
+                    <h2>What's something that always makes you smile?</h2>
+                </div>
+                <div class="options">
+                    <div class="option" data-next="6">Unexpected acts of kindness</div>
+                    <div class="option" data-next="6">Funny jokes or memes</div>
+                    <div class="option" data-next="6">Beautiful scenery or art</div>
+                    <div class="option" data-next="6">Heartwarming stories</div>
+                </div>
+            </div>
+            
+            <!-- Final Screen with Confession -->
+            <div class="screen" id="screen-6">
+                <div class="question">
+                    <h2>Thank you for answering those questions!</h2>
+                    <p>Now for the main message...</p>
+                </div>
+                
+                <div class="letter">
+                    <h2>My Confession</h2>
+                    <p>My Dearest,</p>
+                    <p>I created this little interactive experience because I wanted to find a special way to tell you something that's been on my mind for a while.</p>
+                    <p>Every moment we spend together is meaningful to me. Your laughter brightens my day, your kindness inspires me, and your presence makes everything better.</p>
+                    <p>I've come to realize that what I feel for you is more than just friendship. I've fallen in love with the amazing person you are - with your beautiful soul, your incredible mind, and your wonderful heart.</p>
+                    <p>I don't know what the future holds, but I know that I want you to be a part of mine. Would you consider giving us a chance?</p>
+                    <div class="signature">With all my love,<br>Someone who adores you</div>
+                </div>
+                
+                <div class="final-message">
+                    <p>So... what do you think? 💖</p>
+                </div>
+                
+                <div class="options">
+                    <div class="option" id="yes-option">Yes, I feel the same way!</div>
+                    <div class="option" id="maybe-option">I need some time to think</div>
+                </div>
+                
+                <div class="response-message" id="yes-response">
+                    That's the best news I've ever received! You've made me the happiest person alive! ❤️
+                </div>
+                
+                <div class="response-message" id="maybe-response">
+                    I understand completely. Thank you for being honest. I'll be here whenever you're ready. 💕
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="floating-hearts" id="hearts"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const screens = document.querySelectorAll('.screen');
+            const progressBar = document.getElementById('progress');
+            const heartsContainer = document.getElementById('hearts');
+            const yesOption = document.getElementById('yes-option');
+            const maybeOption = document.getElementById('maybe-option');
+            const yesResponse = document.getElementById('yes-response');
+            const maybeResponse = document.getElementById('maybe-response');
+            
+            let currentScreen = 1;
+            const totalScreens = screens.length;
+            
+            // Create floating hearts
+            function createHearts() {
+                for (let i = 0; i < 20; i++) {
+                    const heart = document.createElement('div');
+                    heart.classList.add('floating-heart');
+                    
+                    // Random position and animation delay
+                    const left = Math.random() * 100;
+                    const delay = Math.random() * 15;
+                    
+                    heart.style.left = left + 'vw';
+                    heart.style.animationDelay = delay + 's';
+                    
+                    heartsContainer.appendChild(heart);
+                }
+            }
+            
+            createHearts();
+            
+            // Update progress bar
+            function updateProgress() {
+                const progress = ((currentScreen - 1) / (totalScreens - 1)) * 100;
+                progressBar.style.width = progress + '%';
+            }
+            
+            // Show specific screen
+            function showScreen(screenNumber) {
+                screens.forEach(screen => {
+                    screen.classList.remove('active');
+                });
+                
+                const targetScreen = document.getElementById('screen-' + screenNumber);
+                if (targetScreen) {
+                    targetScreen.classList.add('active');
+                    currentScreen = screenNumber;
+                    updateProgress();
+                    
+                    // Scroll to top of container
+                    document.querySelector('.container').scrollTop = 0;
+                }
+            }
+            
+            // Option click event
+            document.querySelectorAll('.option').forEach(option => {
+                option.addEventListener('click', function() {
+                    if (this.id === 'yes-option') {
+                        yesResponse.style.display = 'block';
+                        maybeResponse.style.display = 'none';
+                        createHearts(); // Add more hearts for celebration
+                    } else if (this.id === 'maybe-option') {
+                        maybeResponse.style.display = 'block';
+                        yesResponse.style.display = 'none';
+                    } else {
+                        const nextScreen = this.getAttribute('data-next');
+                        if (nextScreen) {
+                            showScreen(nextScreen);
+                        }
+                    }
+                });
+            });
+            
+            // Initialize progress bar
+            updateProgress();
+        });
+    </script>
+</body>
+</html>
+
+
+
